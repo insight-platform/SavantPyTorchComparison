@@ -1,0 +1,37 @@
+name: yolov8_pipeline
+parameters:
+  output_frame: null
+  draw_func: null
+  batch_size: 1
+  batched_push_timeout: 40000
+  metrics:
+    frame_period: 100
+pipeline:
+  elements:
+    # detector
+    - element: nvinfer@detector
+      name: yolov8m
+      model:
+        remote:
+          url: s3://savant-data/models/yolov8m_f630b10/yolov8m_f630b10.zip
+          checksum_url: s3://savant-data/models/yolov8m_f630b10/yolov8m_f630b10.md5
+          parameters:
+            endpoint: https://eu-central-1.linodeobjects.com
+        format: onnx
+        model_file: yolov8m.onnx
+        config_file: config_infer_primary_yoloV8.txt
+        batch_size: ${parameters.batch_size}
+        # max GPU RAM used to build the engine, 6GB by default
+        # set lower than total GPU RAM available on your hardware
+        workspace_size: 6144
+        # output:
+        #   objects:
+        #     - class_id: ${parameters.detected_object.id}
+        #       label: ${parameters.detected_object.label}
+
+  sink:
+    - element: devnull_sink
+  source:
+    element: uridecodebin
+    properties:
+      uri: file:///data/deepstream_sample_720p.mp4
