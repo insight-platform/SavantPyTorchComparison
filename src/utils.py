@@ -1,36 +1,64 @@
-import cv2
+import argparse
+import time
+
+import numpy as np
 import torch
-def draw_results(results, frame):
-    for result in results:
-        xyxy = result.boxes.xyxy.numpy(force=True)
-        print(xyxy)
-        for box in xyxy:
-            pt1 = (int(box[0]), int(box[1]))
-            pt2 = (int(box[2]), int(box[3]))
-            cv2.rectangle(frame, pt1, pt2, (0, 255, 0))
+from ultralytics import YOLO
 
-def yuv_to_rgb(frames):
-    """Converts YUV BCHW dims torch tensor to RGB BCHW dims torch tensor
 
-    :param frames: YUV BCHW dims torch tensor
-    :return: RGB BCHW dims torch tensor
-    """
-    frames = frames.to(torch.float)
-    frames /= 255
-    y = frames[..., 0, :, :]
-    u = frames[..., 1, :, :] - 0.5
-    v = frames[..., 2, :, :] - 0.5
+def get_arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--file_path", type=str, default="/workspace/data/deepstream_sample_720p.mp4"
+    )
+    parser.add_argument(
+        "--model_path", type=str, default="/workspace/models/yolov8m.pt"
+    )
 
-    r = y + 1.14 * v
-    g = y + -0.396 * u - 0.581 * v
-    b = y + 2.029 * u
+    parser.add_argument(
+        "--infer_height",
+        type=int,
+        default=384,
+        help="Inference height, must be multiple of 32.",
+    )
+    parser.add_argument(
+        "--infer_width",
+        type=int,
+        default=640,
+        help="Inference width, must be multiple of 32.",
+    )
+    parser.add_argument(
+        "--batch_size", type=int, default=4, help="Inference batch size."
+    )
+    return parser
 
-    rgb = torch.stack([r, g, b], 1)
-    rgb = rgb.clamp(0, 1)
-    return rgb
 
-def frame_to_np(tensor):
-    frame = (tensor * 255).clamp(0, 255).to(torch.uint8)
-    frame = frame.numpy(force=True).transpose(1, 2, 0)
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    return frame
+def setup_raw_pytorch_model(weights_path) -> torch.nn.Module:
+    model = YOLO(weights_path, task="detect")
+    dummy_input = np.random.randint(0, 255, (720, 1280, 3), dtype=np.uint8)
+    _ = model(dummy_input, half=True, device="0", verbose=False)
+
+    torch_model = model.predictor.model
+    assert isinstance(torch_model, torch.nn.Module)
+    assert not torch_model.training
+    assert next(torch_model.parameters()).is_cuda
+    assert next(torch_model.parameters()).dtype == torch.float16
+    return torch_model
+
+
+class FPSTimer:
+    def __init__(self):
+        self.num_frames = 0
+        self.start = time.monotonic()
+
+    def __enter__(self):
+        self.num_frames = 0
+        self.start = time.monotonic()
+        return self
+
+    def __exit__(self, *args):
+        elapsed = time.monotonic() - self.start
+        fps = self.num_frames / elapsed
+        print(
+            f" - Processed {self.num_frames} frames in {elapsed:.2f} seconds. ({fps:.2f} fps)"
+        )
