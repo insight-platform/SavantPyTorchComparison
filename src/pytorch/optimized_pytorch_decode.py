@@ -2,7 +2,6 @@ import cv2
 import torch
 from torchaudio.io import StreamReader
 from ultralytics.utils.ops import non_max_suppression, scale_boxes
-
 from utils import FPSTimer, get_arg_parser, setup_raw_pytorch_model
 
 
@@ -38,8 +37,8 @@ def get_video_size(file_path):
     stream_reader = StreamReader(file_path)
     stream_reader.add_video_stream(
         1,
-        decoder="h264_cuvid",
-        hw_accel="cuda:0",
+        decoder='h264_cuvid',
+        hw_accel='cuda:0',
     )
     stream_reader.fill_buffer()
     (video,) = stream_reader.pop_chunks()
@@ -82,8 +81,8 @@ def get_decoder_option(infer_size, video_size):
         crop_bottom = video_height - crop_height - crop_top
 
     return {
-        "crop": f"{crop_top}x{crop_bottom}x{crop_left}x{crop_right}",
-        "resize": f"{infer_width}x{infer_height}",
+        'crop': f'{crop_top}x{crop_bottom}x{crop_left}x{crop_right}',
+        'resize': f'{infer_width}x{infer_height}',
     }
 
 
@@ -97,8 +96,8 @@ def main(args):
     decoder_option = get_decoder_option(infer_shape, orig_shape)
     stream_reader.add_video_stream(
         args.batch_size,
-        decoder="h264_cuvid",
-        hw_accel="cuda:0",
+        decoder='h264_cuvid',
+        hw_accel='cuda:0',
         decoder_option=decoder_option,
     )
 
@@ -134,6 +133,6 @@ def main(args):
                     boxes = boxes.numpy(force=True)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = get_arg_parser()
     main(parser.parse_args())
