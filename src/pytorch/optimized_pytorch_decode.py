@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import torch
 from torchaudio.io import StreamReader
@@ -101,6 +103,14 @@ def main(args):
         decoder_option=decoder_option,
     )
 
+    print(
+        'Starting inference loop. Parameters:\n'
+        f'Model: {os.path.basename(args.model_path)}\n'
+        f'Original resolution HxW {orig_shape} -> infer resolution HxW {infer_shape}\n'
+        f'Infer batch size: {args.batch_size}\n'
+        f'Torchaudio + HW accelerated FFMPEG.\n'
+        f'Decoder options {decoder_option}.'
+    )
     # Start the main loop
     with FPSTimer() as timer:
         for (stream_chunk,) in stream_reader.stream():
@@ -126,7 +136,7 @@ def main(args):
                     #     pt1 = (int(box[0]), int(box[1]))
                     #     pt2 = (int(box[2]), int(box[3]))
                     #     cv2.rectangle(frame, pt1, pt2, (0, 255, 0))
-                    # cv2.imwrite('test.jpg', frame)
+                    # cv2.imwrite('/workspace/src/test.jpg', frame)
 
                     boxes[:, :4] = scale_boxes(infer_shape, boxes[:, :4], orig_shape)
                     # Move to cpu

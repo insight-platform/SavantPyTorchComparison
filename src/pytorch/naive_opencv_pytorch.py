@@ -31,7 +31,7 @@ def main(args):
         f'Model: {os.path.basename(args.model_path)}\n'
         f'Original resolution HxW {orig_shape} -> infer resolution HxW {infer_shape}\n'
         f'Infer batch size: {args.batch_size}\n'
-        f'OpenCV cap backend: {cap.getBackendName()}, no HW acceleration.\n'
+        f'OpenCV cap backend: {cap.getBackendName()}, no HW acceleration.'
     )
     # Start the main loop
     with FPSTimer() as timer:
