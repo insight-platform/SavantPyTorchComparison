@@ -1,9 +1,10 @@
+import os
+
 import cv2
 import numpy as np
 import torch
-from ultralytics.data.augment import LetterBox
+from resize_util import resize_preserving_aspect
 from ultralytics.utils.ops import non_max_suppression, scale_boxes
-
 from utils import FPSTimer, get_arg_parser, setup_raw_pytorch_model
 
 
@@ -24,8 +25,14 @@ def main(args):
         int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
     )
-    letterbox_transform = LetterBox(infer_shape, auto=True, stride=torch_model.stride)
 
+    print(
+        'Starting inference loop. Parameters:\n'
+        f'Model: {os.path.basename(args.model_path)}\n'
+        f'Original resolution HxW {orig_shape} -> infer resolution HxW {infer_shape}\n'
+        f'Infer batch size: {args.batch_size}\n'
+        f'OpenCV cap backend: {cap.getBackendName()}, no HW acceleration.\n'
+    )
     # Start the main loop
     with FPSTimer() as timer:
         while cap.isOpened():
@@ -45,7 +52,9 @@ def main(args):
 
             # Preprocess
             # Letterbox resize
-            batch_frames = [letterbox_transform(image=frame) for frame in orig_frames]
+            batch_frames = [
+                resize_preserving_aspect(frame, infer_shape) for frame in orig_frames
+            ]
             batch_frames = np.stack(batch_frames, axis=0)
             # BGR to RGB, BHWC to BCHW, (n, 3, h, w)
             batch_frames = batch_frames[..., ::-1].transpose(0, 3, 1, 2)
@@ -73,13 +82,14 @@ def main(args):
                     #     pt1 = (int(box[0]), int(box[1]))
                     #     pt2 = (int(box[2]), int(box[3]))
                     #     cv2.rectangle(frame, pt1, pt2, (0, 255, 0))
-                    # cv2.imwrite('test.jpg', frame)
+                    # cv2.imwrite('/workspace/src/test.jpg', frame)
+
             if not read_success:
                 break
 
     cap.release()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = get_arg_parser()
     main(parser.parse_args())
