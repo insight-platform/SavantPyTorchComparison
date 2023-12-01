@@ -1,25 +1,31 @@
 FROM nvcr.io/nvidia/pytorch:23.03-py3
 
+ARG FFMPEG_HEADERS_VER=n12.0.16.1
 RUN git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git \
     && cd nv-codec-headers \
-    && git checkout n12.0.16.1 \
+    && git checkout ${FFMPEG_HEADERS_VER} \
     && make install
 
-RUN apt-get update \
+RUN export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
     && apt-get install --no-install-recommends -y \
     yasm \
     libx264-dev \
     libgnutls28-dev \
+    libgl1-mesa-glx \
+    libsm6 \
+    libxext6 \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 ARG PREFIX=/usr/
 ARG CCAP=75
+ARG FFMPEG_VER=n4.4.2
 
-RUN wget -q https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.4.2.tar.gz \
-    && tar -xf n4.4.2.tar.gz \
-    && cd FFmpeg-n4.4.2 \
+RUN wget -q https://github.com/FFmpeg/FFmpeg/archive/refs/tags/${FFMPEG_VER}.tar.gz \
+    && tar -xf ${FFMPEG_VER}.tar.gz \
+    && cd FFmpeg-${FFMPEG_VER} \
     && ./configure \
     --prefix=$PREFIX \
     --extra-cflags='-I/usr/local/cuda/include' \
@@ -63,15 +69,9 @@ RUN git clone https://github.com/pytorch/audio \
     && export USE_CUDA=1 \
     && python setup.py develop
 
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-    libgl1-mesa-glx \
-    libsm6 \
-    libxext6 \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
+COPY requirements.txt .
 RUN python -m pip uninstall -y $(pip list --format=freeze | grep opencv) \
     && rm -rf /usr/local/lib/python3.8/dist-packages/cv2/ \
-    && python -m pip install ultralytics
+    && python -m pip install -r requirements.txt
+
+ENTRYPOINT ["python"]
