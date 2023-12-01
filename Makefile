@@ -2,6 +2,16 @@ PYTORCH_IMAGE_NAME := savant-pt-compare-pytorch
 SAVANT_IMAGE_NAME := savant-pt-compare-savant
 SAVANT_MODULE_NAME := yolov8_pipeline
 
+get-test-video:
+	mkdir -p data
+	curl -o data/deepstream_sample_720p.mp4 \
+	https://eu-central-1.linodeobjects.com/savant-data/demo/deepstream_sample_720p.mp4
+
+get-pytorch-model:
+	mkdir -p pytorch_models
+	wget --output-document pytorch_models/yolov8m.pt \
+	https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt
+
 build-savant:
 	docker build -t $(SAVANT_IMAGE_NAME) docker/savant
 
