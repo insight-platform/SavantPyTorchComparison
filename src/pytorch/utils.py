@@ -28,7 +28,7 @@ def get_arg_parser():
         help='Inference width, must be multiple of 32.',
     )
     parser.add_argument(
-        '--batch_size', type=int, default=4, help='Inference batch size.'
+        '--batch_size', type=int, default=1, help='Inference batch size.'
     )
     return parser
 

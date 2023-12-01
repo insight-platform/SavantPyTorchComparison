@@ -98,6 +98,7 @@ def main(args):
     decoder_option = get_decoder_option(infer_shape, orig_shape)
     stream_reader.add_video_stream(
         args.batch_size,
+        args.buffer_chunk_size,
         decoder='h264_cuvid',
         hw_accel='cuda:0',
         decoder_option=decoder_option,
@@ -107,7 +108,7 @@ def main(args):
         'Starting inference loop. Parameters:\n'
         f'Model: {os.path.basename(args.model_path)}\n'
         f'Original resolution HxW {orig_shape} -> infer resolution HxW {infer_shape}\n'
-        f'Infer batch size: {args.batch_size}\n'
+        f'Infer batch size: {args.batch_size}, stream chunk buffer size {args.buffer_chunk_size}\n'
         f'Torchaudio + HW accelerated FFMPEG.\n'
         f'Decoder options {decoder_option}.'
     )
@@ -145,4 +146,10 @@ def main(args):
 
 if __name__ == '__main__':
     parser = get_arg_parser()
+    parser.add_argument(
+        '--buffer_chunk_size',
+        type=int,
+        default=15,
+        help='Torchaudio StreamReader internal buffer size.',
+    )
     main(parser.parse_args())
