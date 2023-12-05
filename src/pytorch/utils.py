@@ -6,15 +6,19 @@ import torch
 from ultralytics import YOLO
 
 
-def get_arg_parser():
+def get_base_arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--file_path', type=str, default='/workspace/data/deepstream_sample_720p.mp4'
-    )
     parser.add_argument(
         '--model_path', type=str, default='/workspace/models/yolov8m.pt'
     )
+    return parser
 
+
+def get_arg_parser():
+    parser = get_base_arg_parser()
+    parser.add_argument(
+        '--file_path', type=str, default='/workspace/data/deepstream_sample_720p.mp4'
+    )
     parser.add_argument(
         '--infer_height',
         type=int,
