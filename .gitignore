@@ -160,10 +160,17 @@ cython_debug/
 #.idea/
 
 # Savant downloads and models
-cache
-
-# Pytorch models
-pytorch_models
+# ignore everything except labels.txt in a subdirectory
+cache/*
+!cache/models
+cache/models/*
+!cache/models/yolov8_pipeline
+cache/models/yolov8_pipeline/*
+!cache/models/yolov8_pipeline/yolov8m
+cache/models/yolov8_pipeline/yolov8m/*
+!cache/models/yolov8_pipeline/yolov8m/labels.txt
+# Pytorch model weights
+pytorch_weights
 
 # Input videos
 data
