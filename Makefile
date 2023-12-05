@@ -1,5 +1,5 @@
 PYTORCH_IMAGE_NAME := savant-pt-compare-pytorch
-SAVANT_IMAGE_NAME := savant-pt-compare-savant
+SAVANT_IMAGE_NAME := ghcr.io/insight-platform/savant-deepstream:latest
 SAVANT_MODULE_NAME := yolov8_pipeline
 
 get-test-video:
@@ -12,22 +12,12 @@ get-pytorch-model:
 	wget --output-document pytorch_models/yolov8m.pt \
 	https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt
 
-build-savant:
-	docker build -t $(SAVANT_IMAGE_NAME) docker/savant
-
 build-pytorch:
 	docker build -t $(PYTORCH_IMAGE_NAME) docker/pytorch
 
 run-savant:
 	docker run --rm --gpus=all \
-		-e DOWNLOAD_PATH=/cache/downloads/$(SAVANT_MODULE_NAME) \
 		-e MODEL_PATH=/cache/models/$(SAVANT_MODULE_NAME) \
-		-e CUPY_CACHE_DIR=/cache/cupy \
-		-e NUMBA_CACHE_DIR=/cache/numba \
-		-e GST_DEBUG \
-		-e LOGLEVEL \
-		-e METRICS_FRAME_PERIOD \
-		-e GST_DEBUG_COLOR_MODE=off \
 		-v $(shell pwd)/src/savant:/opt/savant/samples/$(SAVANT_MODULE_NAME) \
 		-v $(shell pwd)/data:/data:ro \
 		-v $(shell pwd)/cache:/cache \
