@@ -4,8 +4,9 @@ parameters:
   draw_func: null
   batch_size: 1
   batched_push_timeout: 40000
-  metrics:
-    frame_period: 10000
+  telemetry:
+    metrics:
+      frame_period: 10000
 pipeline:
   elements:
     # detector
