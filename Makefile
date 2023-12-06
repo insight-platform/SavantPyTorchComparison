@@ -15,6 +15,9 @@ get-pytorch-model:
 build-pytorch:
 	docker build -t $(PYTORCH_IMAGE_NAME) docker/pytorch
 
+pull-savant:
+	docker pull $(SAVANT_IMAGE_NAME)
+
 run-savant:
 	docker run --rm --gpus=all \
 		-e MODEL_PATH=/cache/models/$(SAVANT_MODULE_NAME) \
