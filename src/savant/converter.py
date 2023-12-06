@@ -37,7 +37,7 @@ class TensorToBBoxConverter(BaseObjectModelOutputConverter):
         """Converts detector output layer tensor to bbox tensor.
 
         Converter is suitable for PyTorch YOLOv8 models.
-        Assumed one output layer with shape (84, 8400).
+        Assumed one output layer with shape (84, 8400), (xc,yc,w,h,80*class_confs).
         Outputs best class only for each detection.
 
         :param output_layers: Output layer tensor list.
@@ -61,10 +61,10 @@ class TensorToBBoxConverter(BaseObjectModelOutputConverter):
         class_ids = np.argmax(preds[:, 4:], axis=1, keepdims=True)
         confs = np.take_along_axis(preds[:, 4:], class_ids, axis=1).astype(np.float32)
 
-        # offset coordinates boxes by per-class values
+        # move boxes centers by per-class offset
         # so that boxes of different classes do not intersect
         # and the nms can be performed per-class
-        offset_boxes = preds[:, :4] + (class_ids * max(roi[2:])).astype(np.float32)
+        offset_boxes = preds[:, :2] + (class_ids * max(roi[2:])).astype(np.float32)
         keep = nms_cpu(
             offset_boxes,
             np.squeeze(confs),
