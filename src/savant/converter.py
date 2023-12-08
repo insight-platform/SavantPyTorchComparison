@@ -68,7 +68,7 @@ class TensorToBBoxConverter(BaseObjectModelOutputConverter):
         offset_boxes[:, :2] += (class_ids * max(roi[2:])).astype(np.float32)
         keep = nms_cpu(
             offset_boxes,
-            np.squeeze(confs),
+            confs.ravel(),
             self.nms_iou_threshold,
             self.top_k,
         )
