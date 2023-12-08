@@ -64,7 +64,8 @@ class TensorToBBoxConverter(BaseObjectModelOutputConverter):
         # move boxes centers by per-class offset
         # so that boxes of different classes do not intersect
         # and the nms can be performed per-class
-        offset_boxes = preds[:, :2] + (class_ids * max(roi[2:])).astype(np.float32)
+        offset_boxes = np.copy(preds[:, :4])
+        offset_boxes[:, :2] += (class_ids * max(roi[2:])).astype(np.float32)
         keep = nms_cpu(
             offset_boxes,
             np.squeeze(confs),
